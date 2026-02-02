@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Encryption/Decryption Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #0f172a;
+            --bg-light: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: rgba(148, 163, 184, 0.1);
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            animation: gradientShift 20s ease infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 24px;
+        }
+        
+        .info-box {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+        
+        textarea, input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+        
+        textarea {
+            min-height: 100px;
+        }
+        
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .button-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), #ec4899);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 6px;
+            margin-left: auto;
+        }
+        
+        .btn-sm:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .output-section {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 100px;
+            position: relative;
+            margin-top: 12px;
+        }
+        
+        .output-section.success {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+        
+        .output-section.error {
+            border-color: var(--error);
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        .output-text {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            word-break: break-all;
+            color: var(--text);
+            white-space: pre-wrap;
+        }
+        
+        .output-section.error .output-text {
+            color: var(--error);
+        }
+        
+        .output-section.success .output-text {
+            color: var(--success);
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 8px 16px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            position: relative;
+            bottom: -1px;
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .button-row { grid-template-columns: 1fr; }
+            .glass-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 RSA Encryption Tool</h1>
+            <p class="subtitle">Encrypt/Decrypt messages with RSA keys</p>
+        </div>
+        
+        <div class="glass-card">
+            <div class="info-box">
+                <strong>✅ How to use:</strong> 
+                <br>1. Go to the "Encrypt" tab to encrypt messages with the PUBLIC key
+                <br>2. Go to the "Decrypt" tab to decrypt messages with the PRIVATE key
+                <br>3. The private key is already loaded - just paste encrypted text and click Decrypt
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('encrypt')">📨 Encrypt</button>
+                <button class="tab-btn" onclick="switchTab('decrypt')">🔓 Decrypt</button>
+                <button class="tab-btn" onclick="switchTab('keys')">🔑 Keys</button>
+            </div>
+            
+            <!-- ENCRYPT TAB -->
+            <div id="encrypt" class="tab-content active">
+                <div class="form-group">
+                    <label for="publicKeyInput">Public Key (for encrypting):</label>
+                    <textarea id="publicKeyInput" placeholder="Paste or keep the default public key..."></textarea>
+                    <button class="btn-sm" onclick="loadDefaultPublicKey()">Load Default</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="plaintext">Message to Encrypt:</label>
+                    <textarea id="plaintext" placeholder="Type your message here..."></textarea>
+                </div>
+                
+                <button class="btn btn-primary" onclick="encryptText()">
+                    <span>🔒</span>
+                    <span>Encrypt Message</span>
+                </button>
+                
+                <label style="margin-top: 24px; display: block;">Encrypted Result:</label>
+                <div class="output-section" id="encryptOutput">
+                    <div class="output-text">Result will appear here...</div>
+                    <button class="copy-btn" onclick="copyResult('encryptOutput')" style="display:none;" id="encryptCopyBtn">📋 Copy</button>
+                </div>
+            </div>
+            
+            <!-- DECRYPT TAB -->
+            <div id="decrypt" class="tab-content">
+                <div class="form-group">
+                    <label for="encryptedText">Encrypted Message:</label>
+                    <textarea id="encryptedText" placeholder="Paste the encrypted message here..."></textarea>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="decryptText()">
+                    <span>🔓</span>
+                    <span>Decrypt Message</span>
+                </button>
+                
+                <label style="margin-top: 24px; display: block;">Decrypted Result:</label>
+                <div class="output-section" id="decryptOutput">
+                    <div class="output-text">Result will appear here...</div>
+                    <button class="copy-btn" onclick="copyResult('decryptOutput')" style="display:none;" id="decryptCopyBtn">📋 Copy</button>
+                </div>
+            </div>
+            
+            <!-- KEYS TAB -->
+            <div id="keys" class="tab-content">
+                <div class="form-group">
+                    <label>Public Key (Share with others):</label>
+                    <textarea id="displayPublicKey" readonly></textarea>
+                    <button class="btn-sm" onclick="copyKey('displayPublicKey')">📋 Copy Public Key</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Private Key (Keep secret!):</label>
+                    <textarea id="displayPrivateKey" readonly style="background: rgba(239, 68, 68, 0.1); border-color: var(--error);"></textarea>
+                    <button class="btn-sm" onclick="copyKey('displayPrivateKey')">📋 Copy Private Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JSEncrypt Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+    
+    <script>
+        // PRIVATE KEY WITH PROPER PEM FORMATTING
+        const PRIVATE_KEY = `-----BEGIN RSA PRIVATE KEY-----
+MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAIzZOelZteFyWnD/
+Y+Hf6FwBNykRh+Lc7Kpe2mKtV9dXdM9pt0xuArhumomWBIce6iBeErS78q1Viil5
+LK9A26U99RucCQOvB3jyWdomZGEWwl0zZ+nx+1ZqfItbD5+2TVBfRCUCb6xieSRE
+HecvirxH0PjkKNDSaT/7Qww2m6tZAgMBAAECgYBJwsT6OHnwm+NTQ9v6ATl9XUGW
+51BjdVEXk98ISEE1S96ndHSCuSYBkiKqJP8wB/eShdGEBt16+s4FFClbijq8EsAx
+aGB7Ww9SNY1f8hlj5ekZ77lwQQWhAtM9x6mFMOpwOHW42cY0vhyy9XMbkigEjJcq
+ed1JzqDQgRxRKx4o9QJBAMFONmHbfXwye+Lc214zp3xad16RkBYFl4QkC3mhW5nM
+zoSly6tSh6NV8/v2ymayrF0u0OQd8zV7FUuM26CC64cCQQC6h5x5uMcxMYPpm26B
+tTRDlU1CUUw2mjspxekzxpbMZxQaaIPgDZKhTj+yzvJwGZlb2wXpkBQG5y06/qbc
+OyofAkBkri3Y7g7/nvOzh0CiYdj8BcpicQJQ1fzCkFuBsC8bffaaVBguVT/cLKp1
+M2bb8nef2QBnr8m6sy62ONkzUr0FAkBMSfKhhgVSBWJiRQPpYOdDTOkQWpfFLUdN
+SniaiHpclzwNoPluxZ5XAt3ij+lwF8g1XVsJr7fBKwPAwS4VnM0ZAkEAvyaAAF3N
+9ovGtGI4c4VbnGfcPeGm8tLkuGyUdGe46te9IbSap8bdzavnRfcrs6RAw/B/ekJ+
+5/Hcfc1X2flZmw==
+-----END RSA PRIVATE KEY-----`;
+        
+        // PUBLIC KEY WITH PROPER PEM FORMATTING
+        const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCM2TnpWbXhclpw/2Ph3+hcATcp
+EYfi3OyqXtpirVfXV3TPabdMbgK4bpqJlgSHHuogXhK0u/KtVYopeSwvQNulPfUb
+nAkDrwd48lnaJmRhFsJdM2fp8ftWanyLWw+ftk1QX0QlAm+sYnkkRB3nL4q8R9D4
+5CjQ0mk/+0MMNpurWQIDAQAB
+-----END PUBLIC KEY-----`;
+        
+        // Initialize
+        window.addEventListener('load', function() {
+            document.getElementById('publicKeyInput').value = PUBLIC_KEY;
+            document.getElementById('displayPublicKey').value = PUBLIC_KEY;
+            document.getElementById('displayPrivateKey').value = PRIVATE_KEY;
+        });
+        
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function encryptText() {
+            const message = document.getElementById('plaintext').value;
+            const publicKey = document.getElementById('publicKeyInput').value;
+            const output = document.getElementById('encryptOutput');
+            const copyBtn = document.getElementById('encryptCopyBtn');
+            
+            if (!message.trim()) {
+                output.className = 'output-section error';
+                output.innerHTML = '<div class="output-text">❌ Error: Please enter a message to encrypt!</div>';
+                copyBtn.style.display = 'none';
+                return;
+            }
+            
+            if (!publicKey.trim()) {
+                output.className = 'output-section error';
+                output.innerHTML = '<div class="output-text">❌ Error: Please provide a public key!</div>';
+                copyBtn.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const encrypt = new JSEncrypt();
+                encrypt.setPublicKey(publicKey);
+                const encrypted = encrypt.encrypt(message);
+                
+                if (!encrypted) {
+                    output.className = 'output-section error';
+                    output.innerHTML = '<div class="output-text">❌ Encryption failed! Check your public key format.</div>';
+                    copyBtn.style.display = 'none';
+                } else {
+                    output.className = 'output-section success';
+                    output.innerHTML = '<div class="output-text">' + encrypted + '</div>';
+                    copyBtn.style.display = 'block';
+                }
+            } catch (error) {
+                output.className = 'output-section error';
+                output.innerHTML = '<div class="output-text">❌ Encryption error: ' + error.message + '</div>';
+                copyBtn.style.display = 'none';
+            }
+        }
+        
+        function decryptText() {
+            const message = document.getElementById('encryptedText').value;
+            const output = document.getElementById('decryptOutput');
+            const copyBtn = document.getElementById('decryptCopyBtn');
+            
+            if (!message.trim()) {
+                output.className = 'output-section error';
+                output.innerHTML = '<div class="output-text">❌ Error: Please paste an encrypted message!</div>';
+                copyBtn.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const decrypt = new JSEncrypt();
+                decrypt.setPrivateKey(PRIVATE_KEY);
+                const decrypted = decrypt.decrypt(message);
+                
+                if (!decrypted) {
+                    output.className = 'output-section error';
+                    output.innerHTML = '<div class="output-text">❌ Decryption failed! Make sure this message was encrypted with the matching public key.</div>';
+                    copyBtn.style.display = 'none';
+                } else {
+                    output.className = 'output-section success';
+                    output.innerHTML = '<div class="output-text">' + decrypted + '</div>';
+                    copyBtn.style.display = 'block';
+                }
+            } catch (error) {
+                output.className = 'output-section error';
+                output.innerHTML = '<div class="output-text">❌ Decryption error: ' + error.message + '</div>';
+                copyBtn.style.display = 'none';
+            }
+        }
+        
+        function loadDefaultPublicKey() {
+            document.getElementById('publicKeyInput').value = PUBLIC_KEY;
+        }
+        
+        function copyResult(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.querySelector('.output-text').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = element.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+        
+        function copyKey(elementId) {
+            const element = document.getElementById(elementId);
+            navigator.clipboard.writeText(element.value).then(() => {
+                alert('✅ Key copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
